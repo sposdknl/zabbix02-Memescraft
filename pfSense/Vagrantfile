@@ -1,0 +1,32 @@
+IMAGE_NAME = "ksklareski/pfsense-ce"  # ✅ Hotový box z Vagrant Cloud
+
+Vagrant.configure("2") do |config|
+  config.vm.guest = :freebsd
+  config.vm.box = IMAGE_NAME
+  config.ssh.shell = "sh"
+  config.ssh.insert_key = false 
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+
+  # Přístup přes web na https://localhost:8888
+  config.vm.network :forwarded_port, guest: 443, host: 8888, host_ip: "127.0.0.1"
+
+  # WAN síť – NAT nebo DHCP
+  config.vm.network "private_network",
+    auto_config: false,
+    type: "dhcp",
+    netmask: "255.255.0.0",
+    dhcp_ip: "10.1.1.1",
+    dhcp_lower: "10.1.1.100",
+    dhcp_upper: "10.1.1.200"
+
+  # LAN – interní síť
+  config.vm.network "private_network", 
+    auto_config: false,
+    virtualbox__intnet: "intnet"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "pfsense-box"
+    vb.memory = 1024  # doporučeno pro pfSense
+    vb.cpus = 2       # doporučeno pro pfSense
+  end
+end
